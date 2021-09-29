@@ -3,12 +3,24 @@ from selenium.webdriver.common.keys import Keys
 from auth_data import username, password
 import time
 import random
-
-def hash_search(username, password, hashtag):
-    browser = webdriver.Edge('./chromedriver/msedgedriver')
+from selenium.common.exceptions import NoSuchElementException
 
 
-    try:
+class InstagramBot():
+
+    def __init__(self, username, password):
+        self.username = username
+        self.password = password
+        self.browser = webdriver.Edge('./chromedriver/msedgedriver')
+
+    def close_brouser(self):
+
+        self.browser.close()
+        self.browser.quit()
+
+    def login(self):
+
+        browser = self.browser
         browser.get('https://instagram.com')
         time.sleep(random.randrange(3, 5))
 
@@ -23,41 +35,133 @@ def hash_search(username, password, hashtag):
         password_input.send_keys(password)
 
         password_input.send_keys(Keys.ENTER)
+        time.sleep(10)
+
+    def like_photo_by_hashtag(self, hashtag):
+
+        browser = self.browser
+        browser.get(f'https://www.instagram.com/explore/tags/{hashtag}/')
+        time.sleep(3)
+
+        for i in range(1, 4):
+            browser.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+            time.sleep(random.randrange(3, 5))
+
+        hrefs = browser.find_elements_by_tag_name('a')
+        posts_urls = [item.get_attribute('href') for item in hrefs if "/p/" in item.get_attribute('href')]
+
+        for url in posts_urls:
+            try:
+                browser.get(url)
+                time.sleep(3)
+                # like_button = browser.find_element_by_xpath('/html/body/div[6]/div[2]/div/article/div/div['
+                #                                             '2]/div/div[2]/section[1]/span[1]/button').click()
+                like_button = browser.find_element_by_css_selector('div.eo2As span.fr66n button.wpO6b').click()
+                time.sleep(random.randrange(80, 100))
+            except Exception as ex:
+                print(ex)
+                self.close_brouser()
+
+    def xpath_exists(self, url):
+
+        browser = self.browser
+        try:
+            browser.find_element_by_css_selector(url)
+            exist = True
+        except NoSuchElementException:
+            exist = False
+        return exist
+
+    def put_exactly_like(self, userpost):
+        browser = self.browser
+        browser.get(userpost)
         time.sleep(5)
 
-        try:
-            browser.get(f'https://www.instagram.com/explore/tags/{hashtag}/')
-            time.sleep(3)
+        wrong_userpage = "/html/body/div[1]/section/main/div/div/h2"
+        if self.xpath_exists(wrong_userpage):
+            print('Такого поста не существует, проверьте URL')
+            self.close_brouser()
+        else:
+            print("Пост успешно найден, ставим лайк!")
+            time.sleep(2)
+            like_button = 'div.eo2As span.fr66n button.wpO6b'
+            browser.find_element_by_css_selector(like_button).click()
+            time.sleep(2)
 
-            for i in range(1, 4):
-                browser.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+            print(f'Лайк на пост: {userpost} поставлен')
+            self.close_brouser()
+
+
+    def put_many_likes(self, userpage):
+        browser = self.browser
+        browser.get(userpage)
+        time.sleep(4)
+
+        wrong_userpage = "/html/body/div[1]/section/main/div/div/h2"
+        if self.xpath_exists(wrong_userpage):
+            print('Такого пользователя не существует, проверьте URL')
+            self.close_brouser()
+        else:
+            print("Пользователь успешно найден, ставим лайки!")
+            time.sleep(2)
+
+            posts_count = int(browser.find_element_by_xpath("/html/body/div[1]/section/main/div/header/section/ul/li["
+                                                            "1]/span/span").text)
+            loops_count = int(posts_count / 12)
+            print(loops_count)
+
+            posts_urls = []
+
+            if loops_count is True:
+                for i in range(0, loops_count):
+                    hrefs = browser.find_elements_by_tag_name('a')
+                    hrefs = [item.get_attribute('href') for item in hrefs if "/p/" in item.get_attribute('href')]
+
+                    for href in hrefs:
+                        posts_urls.append(href)
+
+                    browser.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+                    time.sleep(random.randrange(3, 5))
+                    print(f"Итерация #{i}")
+            else:
+                print("прокрутка не требуется")
+                hrefs = browser.find_elements_by_tag_name('a')
+                hrefs = [item.get_attribute('href') for item in hrefs if "/p/" in item.get_attribute('href')]
+                for href in hrefs:
+                    posts_urls.append(href)
                 time.sleep(random.randrange(3, 5))
+                # print(f"Итерация #{i}")
 
-            hrefs = browser.find_elements_by_tag_name('a')
-            posts_urls = [item.get_attribute('href') for item in hrefs if "/p/" in item.get_attribute('href')]
+            file_name = userpage.split('/')[-2]
 
-            for url in posts_urls:
-                try:
-                    browser.get(url)
-                    time.sleep(3)
-                    # like_button = browser.find_element_by_xpath('/html/body/div[6]/div[2]/div/article/div/div['
-                    #                                             '2]/div/div[2]/section[1]/span[1]/button').click()
-                    like_button = browser.find_element_by_css_selector('div.eo2As span.fr66n button.wpO6b').click()
-                    time.sleep(random.randrange(80, 100))
-                except Exception as ex:
-                    print(ex)
+            with open(f'{file_name}.txt', 'a') as file:
+                for post_url in posts_urls:
+                    file.write(post_url + "\n")
 
-            browser.close()
-            browser.quit()
+            set_posts_urls = set(posts_urls)
+            set_posts_urls = list(set_posts_urls)
 
-        except Exception as ex:
-            print(ex)
-            browser.close()
-            browser.quit()
+            with open(f'{file_name}_set.txt', 'a') as file:
+                for post_url in set_posts_urls:
+                    file.write(post_url + '\n')
 
-    except Exception as ex:
-        print(ex)
-        browser.close()
-        browser.quit()
+            with open(f'{file_name}_set.txt') as file:
+                urls_list = file.readlines()
 
-hash_search(username, password, 'frenchbulldog')
+                for post_url in urls_list[0:6]:
+                    try:
+                        browser.get(post_url)
+                        time.sleep(3)
+
+                        like_button = browser.find_element_by_css_selector('div.eo2As span.fr66n button.wpO6b').click()
+                        time.sleep(2)
+
+                        print('Like на пост:  {post_url} поставлен!')
+                    except Exception as ex:
+                        print(ex)
+                        self.close_brouser()
+            self.close_browser()
+
+my_bot = InstagramBot(username, password)
+my_bot.login()
+my_bot.put_many_likes('https://www.instagram.com/_raidersworld_/')
