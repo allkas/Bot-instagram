@@ -240,6 +240,7 @@ class InstagramBot:
         file_name = userpage.split("/")[-2]
 
         # создаём папку с именем пользователя для чистоты проекта
+
         if os.path.exists(f"{file_name}"):
             print(f"Папка {file_name} уже существует!")
         else:
@@ -256,8 +257,12 @@ class InstagramBot:
 
             followers_button = browser.find_element_by_xpath(
                 "/html/body/div[1]/section/main/div/header/section/ul/li[2]/a")
-            followers_count = followers_button.text
-            followers_count = int(followers_count.split(' ')[0])
+            # followers_count = followers_button.text
+            # print(followers_count)
+            # followers_count = int(followers_count.split(' ')[0])
+            followers_span = '/html/body/div[1]/section/main/div/header/section/ul/li[2]/a/span'
+            followers_count = browser.find_element_by_xpath(followers_span).get_attribute('title')
+            followers_count = int(followers_count.replace(' ', ''))
             print(f"Количество подписчиков: {followers_count}")
             time.sleep(2)
 
@@ -283,7 +288,7 @@ class InstagramBot:
                 for url in all_urls_div:
                     url = url.find_element_by_tag_name("a").get_attribute("href")
                     followers_urls.append(url)
-                print(followers_urls)
+                # print(followers_urls)
 
                 # сохраняем всех подписчиков пользователя в файл
 
@@ -306,17 +311,18 @@ class InstagramBot:
 
                             except Exception as ex:
                                 print('Файл со ссылками ещё не создан!')
-                                # print(ex)
+                                print(ex)
 
                             browser = self.browser
                             browser.get(user)
                             page_owner = user.split("/")[-2]
 
-                            if self.xpath_exists("/html/body/div[1]/section/main/div/header/section/div[1]/div/a"):
-
+                            if self.xpath_exists("/html/body/div[1]/section/main/div/header/section/div[1]/div[1]/a"):
                                 print("Это наш профиль, уже подписан, пропускаем итерацию!")
+
                             elif self.xpath_exists(
-                                    "/html/body/div[1]/section/main/div/header/section/div[1]/div[2]/div/span/span[1]/button/div/span"):
+                                    '/html/body/div[1]/section/main/div/header/section/div[1]/div[1]/div/div['
+                                    '2]/div/span/span[1]/button/div/span'):
                                 print(f"Уже подписаны, на {page_owner} пропускаем итерацию!")
                             else:
                                 time.sleep(random.randrange(4, 8))
@@ -326,24 +332,30 @@ class InstagramBot:
                                     try:
                                         follow_button = browser.find_element_by_xpath(
                                             "/html/body/div[1]/section/main/div/header/section/div[1]/div[1]/button").click()
+
                                         print(f'Запросили подписку на пользователя {page_owner}. Закрытый аккаунт!')
                                     except Exception as ex:
                                         print(ex)
                                 else:
                                     try:
                                         if self.xpath_exists(
-                                                "/html/body/div[1]/section/main/div/header/section/div[1]/div[1]/button"):
+                                                "/html/body/div[1]/section/main/div/header/section/div[1]/div["
+                                                "1]/div/div/div/span/span[1]/button"):
                                             follow_button = browser.find_element_by_xpath(
-                                                "/html/body/div[1]/section/main/div/header/section/div[1]/div[1]/button").click()
+                                                "/html/body/div[1]/section/main/div/header/section/div[1]/div["
+                                                "1]/div/div/div/span/span[1]/button").click()
                                             print(f'Подписались на пользователя {page_owner}. Открытый аккаунт!')
                                         else:
                                             follow_button = browser.find_element_by_xpath(
-                                                "/html/body/div[1]/section/main/div/header/section/div[1]/div[1]/div/span/span[1]/button").click()
+                                                "/html/body/div[1]/section/main/div/header/section/div[1]/div["
+                                                "1]/div/div/div/span/span[1]/button").click()
                                             print(f'Подписались на пользователя {page_owner}. Открытый аккаунт!')
                                     except Exception as ex:
                                         print(ex)
 
-                                # записываем данные в файл для ссылок всех подписок, если файла нет, создаём, если есть - дополняем
+                                # записываем данные в файл для ссылок всех подписок, если файла нет, создаём,
+                                # если есть - дополняем
+
                                 with open(f'{file_name}/{file_name}_subscribe_list.txt',
                                           'a') as subscribe_list_file:
                                     subscribe_list_file.write(user)
@@ -363,4 +375,4 @@ class InstagramBot:
 
 my_bot = InstagramBot(username, password)
 my_bot.login()
-my_bot.get_all_followers('https://www.instagram.com/_raidersworld_/')
+my_bot.get_all_followers('https://www.instagram.com/luna_thee_frenchie/')
