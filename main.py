@@ -372,7 +372,50 @@ class InstagramBot:
 
         self.close_browser()
 
+    def unsubscribe_for_all_users(self, userpage):
+
+        browser = self.browser
+        browser.get(f"https://www.instagram.com/{username}/")
+        time.sleep(random.randrange(3, 5))
+
+        following_button = browser.find_element_by_xpath('/html/body/div[1]/section/main/div/header/section/ul/li[3]/a')
+        following_count = following_button.find_elements_by_tag_name('span').text
+
+        if ',' in following_count:
+            following_count = int(''.join(following_count.split(',')))
+        else:
+            following_count = int(following_count)
+        time.sleep(random.randrange(3, 6))
+        loops_count = int(following_count / 10) + 1
+
+        for loop in range(1, loops_count + 1):
+
+            count = 10
+            browser.get(f"https://www.instagram.com/{username}/")
+            time.sleep(random.randrange(3, 5))
+
+            following_button = browser.find_element_by_xpath('/html/body/div[1]/section/main/div/header/section/ul'
+                                                             '/li[3]/a')
+            following_button.click()
+            time.sleep(random.randrange(3, 5))
+
+            following_div_block = browser.find_element_by_xpath('/html/body/div[6]/div/div/div[3]/ul/div')
+            following_users = following_div_block.find_elements_by_tag_name('li')
+            time.sleep(random.randrange(3, 5))
+
+            for user in following_users:
+                user_url = user.find_elements_by_tag_name("a").get_attribute('href')
+                user_name = user_url.split('/')[-2]
+
+                following_button = browser.find_element_by_tag_name('button').click()
+                time.sleep(random.randrange(3, 5))
+                unfollow_button = browser.find_element_by_xpath(
+                    '/html/body/div[7]/div/div/div/div[3]/button[1]').click()
+
+                count -= 1
+
+                time.sleep(random.randrange(90, 130))
 
 my_bot = InstagramBot(username, password)
 my_bot.login()
-my_bot.get_all_followers('https://www.instagram.com/luna_thee_frenchie/')
+my_bot.get_all_followers('https://www.instagram.com/kobe_thefrenchton/')
